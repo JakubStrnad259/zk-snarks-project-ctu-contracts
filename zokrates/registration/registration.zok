@@ -1,8 +1,8 @@
 import "hashes/sha256/512bitPacked" as sha256packed;
 
 def main(private field[4] pass, private field salt, field[4] signerAddress, field[2] passHash, field[2] passSaltAddressHash) -> bool {
-    // check if pass is correct
     field[2] calculatedPassHash = sha256packed([pass[0], pass[1], pass[2], pass[3]]);
+    // check if the sender knows password to passwordImage
     assert(calculatedPassHash == passHash);
 
     field[2] saltHash = sha256packed([0, 0, 0, salt]);
@@ -10,6 +10,7 @@ def main(private field[4] pass, private field salt, field[4] signerAddress, fiel
     field[2] signerAddressHash = sha256packed([signerAddress[0], signerAddress[1], signerAddress[2], signerAddress[3]]);
     field[2] finalHash = sha256packed([passSaltHash[0], passSaltHash[1], signerAddressHash[0], signerAddressHash[1]]);
 
+    // check if the sender knows password + salt + msg.sender is correct
     assert(finalHash == passSaltAddressHash);
     return true;
 }
