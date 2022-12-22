@@ -1,20 +1,34 @@
 {
   "inputs": [
     {
-      "name": "a",
+      "name": "pass",
       "public": false,
+      "type": "array",
+      "components": {
+        "size": 4,
+        "type": "field"
+      }
+    },
+    {
+      "name": "salt",
+      "public": true,
       "type": "field"
     },
     {
-      "name": "b",
+      "name": "signerAddress",
       "public": true,
-      "type": "field"
+      "type": "array",
+      "components": {
+        "size": 4,
+        "type": "field"
+      }
     }
   ],
   "output": {
-    "type": "tuple",
+    "type": "array",
     "components": {
-      "elements": []
+      "size": 2,
+      "type": "field"
     }
   }
 }

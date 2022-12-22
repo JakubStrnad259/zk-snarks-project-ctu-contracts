@@ -4,8 +4,19 @@ coverage
 coverage.json
 typechain
 typechain-types
-
 # Hardhat files
 cache
 artifacts
 
+# ZoKrates default files
+out
+out.r1cs
+out.wtns
+abi.json
+proof.json
+proving.key
+verification.key
+verifier.sol
+proof.json
+universal_setup.dat
+witness

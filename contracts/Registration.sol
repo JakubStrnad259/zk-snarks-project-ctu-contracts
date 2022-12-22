@@ -12,12 +12,31 @@ contract RegistrationContract {
     /** 
     * @notice Register user to the CTU system
     */
-    function register() external {
-        
+    function register (
+        uint256 salt,
+        bytes32 usernameHash,
+        bytes32 passwordHash,
+        bytes32 passAndSignerAddressAndSaltHash
+        // AProof1
+        // Aproof2
+        // Aproof3
+    ) external {
+        // verify that hash(pass + msg.sender + salt) == passAndSignerAddressAndSaltHash
+        // verify that hash(pass) == passwordHash
+        // input into mapping hash(user) => hash(pass)
+    }
+
+    function verifyRegistration(
+        //proof
+        bytes32 usernameHash,
+        bytes32 passHash
+        uint256 salt
+    ) external {
+
     }
 
     // for relayer BE
-    function relayedRegister() external {
-
+    function relayedRegister(
+    ) external {
     }
 }
