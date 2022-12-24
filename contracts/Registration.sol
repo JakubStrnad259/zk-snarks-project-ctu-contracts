@@ -25,18 +25,4 @@ contract RegistrationContract {
         // verify that hash(pass) == passwordHash
         // input into mapping hash(user) => hash(pass)
     }
-
-    function verifyRegistration(
-        //proof
-        bytes32 usernameHash,
-        bytes32 passHash
-        uint256 salt
-    ) external {
-
-    }
-
-    // for relayer BE
-    function relayedRegister(
-    ) external {
-    }
 }
