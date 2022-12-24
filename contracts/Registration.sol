@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-contract RegistrationContract {
+contract Registration {
     mapping(bytes32 => bytes32) private students;
 
-    event Registration(
+    event StudentRegistered(
         bytes32 usernameHash,
         bytes32 passwordHash
     );
