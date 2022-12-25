@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 
 async function main() {
 
-  const contract = await ethers.getContractFactory("IDVerifier");
+  const contract = await ethers.getContractFactory("RegistryVerifier");
   const deployedContract = await contract.deploy();
   await deployedContract.deployed()
   console.log(`Contract deployed to address ${deployedContract.address}`);

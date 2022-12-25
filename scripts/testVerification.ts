@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
-import { NationalRegister__factory, NationalRegister } from "../typechain-types";
+import { Registry__factory, Registry } from "../typechain-types";
 async function main() {
-    const contract:NationalRegister = NationalRegister__factory.connect("0x9Db0b2F107FF30b11456f1B0213Ba146F301a9D2", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
+    const contract:Registry = Registry__factory.connect("0x7Fa8e3A31fB26Ca7507AAe71a108620A0c890b30", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
     
     const proof = {
         "scheme": "g16",
@@ -37,8 +37,10 @@ async function main() {
 
 
     //@ts-ignore
-    const result = await contract.verify([proof.proof.a, proof.proof.b, proof.proof.c], 1);
-    console.log(result);
+    //const result = await contract.verify([proof.proof.a, proof.proof.b, proof.proof.c], 1);
+    //console.log(result);
+    const somethign = await contract.test(1);
+    console.log(somethign);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

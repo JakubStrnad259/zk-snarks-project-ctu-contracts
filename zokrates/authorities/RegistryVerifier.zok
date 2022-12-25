@@ -1,7 +1,7 @@
 import "hashes/sha256/512bitPacked" as sha256packed;
 
-def main(private field personId, private field salt, field[2] publicHash) -> bool {
-    field[2] computedHash = sha256packed([0, 0, personId, salt]);
+def main(private field personId, private field salt, field signerAddress, field[2] publicHash) -> bool {
+    field[2] computedHash = sha256packed([0, signerAddress, personId, salt]);
     assert(computedHash == publicHash);
     return true;
 }
