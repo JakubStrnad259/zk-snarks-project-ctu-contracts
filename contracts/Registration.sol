@@ -24,5 +24,8 @@ contract Registration {
         // verify that hash(pass + msg.sender + salt) == passAndSignerAddressAndSaltHash
         // verify that hash(pass) == passwordHash
         // input into mapping hash(user) => hash(pass)
+
+        // SCIO verification
+        // The user knows password verification
     }
 }
