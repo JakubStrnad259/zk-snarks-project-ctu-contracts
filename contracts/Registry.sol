@@ -40,9 +40,9 @@ contract Registry is Ownable {
     /**
      * @notice Registers a person to the national registry
      */
-    function setPerson(uint256 _id, uint128 _accessHashLow, uint128 _accessHashHigh, uint128 _parameter) external onlyOwner {
+    function setPerson(uint256 _id, bytes32 _accessHashLow, bytes32 _accessHashHigh, bytes32 _parameter) external onlyOwner {
         require(persons[_id].ID == 0, "Person already registered!");
-        persons[_id] = Person(_id, _accessHashLow, _accessHashHigh, _parameter);
+        persons[_id] = Person(_id, uint128(uint256(_accessHashLow)), uint128(uint256(_accessHashHigh)), uint128(uint256(_parameter)));
     }
 
     /**
@@ -53,7 +53,7 @@ contract Registry is Ownable {
     function verify(uint256 _id, Proof memory _proof) external view returns(bool) {
         Person storage person = persons[_id];
         // check if registered
-        require(person.ID == 0, "Person not registered!");
+        require(person.ID != 0, "Person not registered!");
         uint256[4] memory inputs = [uint256(uint128(uint160(msg.sender))), person.accessHashLow, person.accessHashHigh, person.parameter];
         return verifier.verifyTx(_proof, inputs);
     }

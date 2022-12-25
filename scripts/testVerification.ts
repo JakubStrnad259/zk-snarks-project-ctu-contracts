@@ -1,46 +1,47 @@
 import { ethers } from "hardhat";
 import { Registry__factory, Registry } from "../typechain-types";
 async function main() {
-    const contract:Registry = Registry__factory.connect("0x7Fa8e3A31fB26Ca7507AAe71a108620A0c890b30", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
+    const contract:Registry = Registry__factory.connect("0x199cA9CA23Be3f9FF095AF817997291Bc97582C6", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
     
     const proof = {
         "scheme": "g16",
         "curve": "bn128",
         "proof": {
           "a": [
-            "0x1f04c4d02c87e56310d588976633952b653af3d808934f390eb3fa2cb7a081ce",
-            "0x1c12b3b92f8446cfe45038894fea03fbd11e9d532f8d6eb12116cd390e7deb03"
+            "0x19adc9c6df5753ae14590be5c6abe1e054932121ad5a9b479ebfc5cc58ec0786",
+            "0x0f639c858c25b9608b6d44f04bcc5436e5a3e4912607c6c03f69c68a1461e743"
           ],
           "b": [
             [
-              "0x1c852cb2cf2c424a6b83f8738d475142b66054d92c8e83a7c97d1a8a0ad723c5",
-              "0x03453802be4c473f842605ecc6eaa3a6ec044ac20d2bb402fe7ee84347a0ec65"
+              "0x16f2459cac3182800bd8c85edc80ec90a57c527412c2a5a173422bcff35ad18a",
+              "0x103f40f83ebfb502de8681cfa8d0c4e5c3d539f0fc8bb17b5801e8dc7edc3b9a"
             ],
             [
-              "0x23906e88e492c6c6e621d748184b600a63d40361965f6ccb414ceb4d5cbf97fd",
-              "0x1aba00510186630ea5156e139bf00bdbabf094679ee709d749aee3494b1eb6db"
+              "0x29e6c699186a8f842ec35525bc2b46c3908f99318c536d98968442de0b3d4273",
+              "0x00308e1a2e2fa567aa5c8bfb3ed35f5c1e0a511805db6e2e3ff11d37b30289bc"
             ]
           ],
           "c": [
-            "0x04340de77c425f375f23c3dafbc2838d70fd04b6ca4f5869de743d4243bf4f25",
-            "0x13baf45567c0e3ff5fbc832fba4629ebb490ce4a0777243004bdeed910ee15bb"
+            "0x0cc4fb1f672ade3988fee6c5d98beec686cd07a62edd1e570bcd7f66de1bf919",
+            "0x17126864110d78b690df0a3d0eb2ae1c72f086ddf52b3d12a0e0f4d3eb332b81"
           ]
         },
         "inputs": [
-          "0x000000000000000000000000000000001385cb23bfaf901f9fa85e0faec157d1",
-          "0x00000000000000000000000000000000bc78c2572d11b3dd0a75671265bb881d"
+          "0x00000000000000000000000000000000c46b22af700fcb56ecda6973f444bfa1",
+          "0x00000000000000000000000000000000d8e6ef25573a61b2a6c82f081e9d3f52",
+          "0x00000000000000000000000000000000365d339d548280ac9e6d187f9f4dd653",
+          "0x0000000000000000000000000000000000000000000000000000000000000001"
         ]
-    }
+      }
 
-    //const person = await contract.persons(0);
-    //console.log(person);
-
+    const person = await contract.persons(1);
+    console.log(person);
 
     //@ts-ignore
-    //const result = await contract.verify([proof.proof.a, proof.proof.b, proof.proof.c], 1);
-    //console.log(result);
-    const somethign = await contract.test(1);
-    console.log(somethign);
+    const result = await contract.verify(1, [proof.proof.a, proof.proof.b, proof.proof.c]);
+    console.log(result);
+    //const somethign = await contract.persons(1);
+    //console.log(somethign);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
