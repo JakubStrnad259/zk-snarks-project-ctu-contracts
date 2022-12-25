@@ -18,13 +18,13 @@ contract Registry is Ownable {
     IRegistryVerifier public verifier;
 
     struct Person {
-        uint256 ID;
+        bytes32 hashID;
         uint128 accessHashLow;
         uint128 accessHashHigh;
         uint128 parameter;
     }
 
-    mapping(uint256 => Person) public persons;
+    mapping(bytes32 => Person) public persons;
 
     constructor(address _verifierAddress) {
         verifier = IRegistryVerifier(_verifierAddress);
@@ -40,20 +40,20 @@ contract Registry is Ownable {
     /**
      * @notice Registers a person to the national registry
      */
-    function setPerson(uint256 _id, bytes32 _accessHashLow, bytes32 _accessHashHigh, bytes32 _parameter) external onlyOwner {
-        require(persons[_id].ID == 0, "Person already registered!");
-        persons[_id] = Person(_id, uint128(uint256(_accessHashLow)), uint128(uint256(_accessHashHigh)), uint128(uint256(_parameter)));
+    function setPerson(bytes32 _hashID, bytes32 _accessHashLow, bytes32 _accessHashHigh, bytes32 _parameter) external onlyOwner {
+        require(persons[_hashID].hashID == 0, "Person already registered!");
+        persons[_hashID] = Person(_hashID, uint128(uint256(_accessHashLow)), uint128(uint256(_accessHashHigh)), uint128(uint256(_parameter)));
     }
 
     /**
      * @notice Verifies proof of a person with given id + check if the person is registered
-     * @param _id id of a person that needs to be verified
+     * @param _hashID hashed id of a person that needs to be verified
      * @param _proof proof of a person that the person knows the password (ID belongs to the person)  
      */
-    function verify(uint256 _id, Proof memory _proof) external view returns(bool) {
-        Person storage person = persons[_id];
+    function verify(bytes32 _hashID, Proof memory _proof) external view returns(bool) {
+        Person storage person = persons[_hashID];
         // check if registered
-        require(person.ID != 0, "Person not registered!");
+        require(person.hashID != 0, "Person not registered!");
         uint256[4] memory inputs = [uint256(uint128(uint160(msg.sender))), person.accessHashLow, person.accessHashHigh, person.parameter];
         return verifier.verifyTx(_proof, inputs);
     }

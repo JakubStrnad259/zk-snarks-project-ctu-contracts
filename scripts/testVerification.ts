@@ -1,7 +1,10 @@
 import { ethers } from "hardhat";
 import { Registry__factory, Registry } from "../typechain-types";
+//@ts-ignore
+import sha256 from 'crypto-js/sha256';
+
 async function main() {
-    const contract:Registry = Registry__factory.connect("0x199cA9CA23Be3f9FF095AF817997291Bc97582C6", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
+    const contract:Registry = Registry__factory.connect("0x5F71a7cAfD591152Da715E3fE750622A4fd4243F", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
     
     const proof = {
         "scheme": "g16",
@@ -34,11 +37,13 @@ async function main() {
         ]
       }
 
-    const person = await contract.persons(1);
+    const id = 1;
+    const hash = "0x" + sha256(id.toString());
+    const person = await contract.persons(hash);
     console.log(person);
 
     //@ts-ignore
-    const result = await contract.verify(1, [proof.proof.a, proof.proof.b, proof.proof.c]);
+    const result = await contract.verify(hash, [proof.proof.a, proof.proof.b, proof.proof.c]);
     console.log(result);
     //const somethign = await contract.persons(1);
     //console.log(somethign);
