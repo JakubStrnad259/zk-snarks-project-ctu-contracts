@@ -1,16 +1,8 @@
 import "hashes/sha256/512bitPacked" as sha256packed;
 
-def main(private field[4] password, private field salt, field[4] signerAddress, field[2] passHash, field[2] passSaltAddressHash) -> bool {
+def main(private field[4] password, field signerAddress, field[2] publicHash) -> bool {
     field[2] calculatedPassHash = sha256packed(password);
-    // check if the sender knows password to passwordImage from registration contract
-    assert(calculatedPassHash == passHash);
-
-    field[2] saltHash = sha256packed([0, 0, 0, salt]);
-    field[2] passSaltHash = sha256packed([passHash[0], passHash[1], saltHash[0], saltHash[1]]);
-    field[2] signerAddressHash = sha256packed(signerAddress);
-    field[2] finalHash = sha256packed([passSaltHash[0], passSaltHash[1], signerAddressHash[0], signerAddressHash[1]]);
-
-    // check if the sender knows password + salt + msg.sender is correct
-    assert(finalHash == passSaltAddressHash);
+    field[2] finalHash = sha256packed([0, calculatedPassHash[0], calculatedPassHash[1], signerAddress]);
+    assert(finalHash == publicHash);
     return true;
 }

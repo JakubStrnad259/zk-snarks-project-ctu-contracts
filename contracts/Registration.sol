@@ -1,31 +1,56 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
+import "./utils.sol";
+
+interface IPasswordVerifier {
+    function verifyTx(Proof memory proof, uint[3] memory input) external view returns(bool);
+}
+
+interface ISCIO {
+    function verify(bytes32 _hashID, uint256 _threshold, Proof memory _registryProof) external view returns(bool);
+}
 
 contract Registration {
-    mapping(bytes32 => bytes32) private students;
+    using Pairing for *;
 
-    event StudentRegistered(
-        bytes32 usernameHash,
-        bytes32 passwordHash
-    );
+    ISCIO public scio;
+    IPasswordVerifier public verifier;
+
+    uint256 constant public CTU_SCIO_THRESHOLD = 90;
+
+    struct Student {
+        bytes32 usernameHash;
+        uint128 passwordHashLow;
+        uint128 passwordHashHigh;
+        uint128 parameter;
+    }
+
+    mapping(bytes32 => Student) public students;
+
+    constructor(address _passwordVerifierAddress, address _scioAddress) {
+        verifier = IPasswordVerifier(_passwordVerifierAddress);
+        scio = ISCIO(_scioAddress);
+    }
 
     /** 
     * @notice Register user to the CTU system
     */
-    function register (
-        uint256 salt,
-        bytes32 usernameHash,
-        bytes32 passwordHash,
-        bytes32 passAndSignerAddressAndSaltHash
-        // AProof1
-        // Aproof2
-        // Aproof3
-    ) external {
-        // verify that hash(pass + msg.sender + salt) == passAndSignerAddressAndSaltHash
-        // verify that hash(pass) == passwordHash
-        // input into mapping hash(user) => hash(pass)
-
-        // SCIO verification
-        // The user knows password verification
+    function register(
+        bytes32 _hashID,
+        bytes32 _hashUsername,
+        uint256[3] memory _passwordProofInput,
+        Proof memory _passwordProof,
+        Proof memory _registryProof
+    ) external returns(bool) {
+        require(scio.verify(_hashID, CTU_SCIO_THRESHOLD, _registryProof), "SCIO exam verification is invalid!");
+        require(verifier.verifyTx(_passwordProof, _passwordProofInput), "Sender does not know password!");
+        require(students[_hashUsername].usernameHash == 0, "The student is already registered!");
+        students[_hashUsername] = Student(
+            _hashUsername, 
+            uint128(uint256(_passwordProofInput[0])), 
+            uint128(uint256(_passwordProofInput[1])), 
+            uint128(_passwordProofInput[2])
+        );
+        return true;
     }
 }

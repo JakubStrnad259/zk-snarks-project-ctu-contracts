@@ -1,0 +1,7 @@
+import "hashes/sha256/512bitPacked" as sha256packed;
+
+def main(private field[4] password, field signerAddress) -> field[2] {
+    field[2] passHash = sha256packed(password);
+    field[2] finalHash = sha256packed([0, passHash[0], passHash[1], signerAddress]);
+    return finalHash;
+}
