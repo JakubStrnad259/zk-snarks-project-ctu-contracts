@@ -5,7 +5,7 @@ import sha256 from 'crypto-js/sha256';
 
 
 async function main() {
-    const contract:Registry = Registry__factory.connect("0x5F71a7cAfD591152Da715E3fE750622A4fd4243F", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
+    const contract:Registry = Registry__factory.connect("0x9352CC61ed4ca9219D245ad99D06a983676CBb80", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
 
     //const person = await contract.persons(0);
     //console.log(person);

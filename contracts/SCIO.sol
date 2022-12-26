@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./utils.sol";
 
 interface ISCIOVerifier {
-    function verifyTx(Proof memory proof, uint[4] memory input) external view returns(bool);
+    function verifyTx(Proof memory proof, uint[2] memory input) external view returns(bool);
 }
 
 interface IRegistry {
@@ -14,24 +14,31 @@ interface IRegistry {
 contract SCIO is Ownable {
     using Pairing for *;
 
-    bytes32 public ctuPublicKey = "0x323";
+    //bytes32 public ctuPublicKey = "0x323";
     ISCIOVerifier public verifier;
     IRegistry public registry;
 
-    mapping (bytes32 => Proof[]) public examAttempts;
-
-    constructor(address _verifierAddress, address _registryAddress, bytes32 _ctuPublicKey) {
-        verifier = ISCIOVerifier(_verifierAddress);
-        registry = IRegistry(_registryAddress);
-        ctuPublicKey = _ctuPublicKey;
+    struct Attempt {
+        Proof proof;
+        uint256 parameter;
     }
 
+    mapping (bytes32 => Attempt[]) public examAttempts;
+
+    constructor(address _verifierAddress, address _registryAddress) {
+        verifier = ISCIOVerifier(_verifierAddress);
+        registry = IRegistry(_registryAddress);
+        //ctuPublicKey = _ctuPublicKey;
+    }
+
+    /*
     function setCTUPublicKey(bytes32 _ctuPublicKey) external onlyOwner {
         ctuPublicKey = _ctuPublicKey;
     }
-
-    function addExamResult(bytes32 _hashID, Proof memory _proof) external onlyOwner {
-        examAttempts[_hashID].push(_proof);
+    */
+    function addExamResult(bytes32 _hashID, Proof memory _proof, uint256 _parameter) external onlyOwner {
+        // Maybe comment this more
+        examAttempts[_hashID].push(Attempt(_proof, _parameter));
     }
 
     function verify(
@@ -44,11 +51,11 @@ contract SCIO is Ownable {
 
         // Check all results if there is satisfactory one given threshold
         // test pisu ja, neměl bych zobrazovat udaje SCIu.
-        Proof[] storage attempts = examAttempts[_hashID];
+        Attempt[] storage attempts = examAttempts[_hashID];
         uint256 attemptCount = attempts.length;
         for (uint256 i = 0; i < attemptCount; i++) {
-            bool result = verifier.verifyTx(attempts[i], [0, 0, 0, 0]);
-            if (result) {return result;}
+            bool result = verifier.verifyTx(attempts[i].proof, [_threshold, attempts[i].parameter]);
+            if (result) {return true;}
         }
         return false;
     }

@@ -1,5 +1,3 @@
-//import "ecc/babyjubjubParams.code" as context
-//import "ecc/proofOfOwnership.code" as proofOfOwnership
 import "hashes/sha256/512bitPacked" as sha256packed;
 
 /*
@@ -10,19 +8,7 @@ skA: SCIO private key
 id: register id of a person who did a SCIO test
 idHash: sha hash of id
 */
-def main(private field score, private field id, private field salt, field threshold, field[2] hashID, field[2] publicHash) -> bool {
-    // load BabyJubJub context
-    //context = context();
-    // prove that this proof belongs to SCIO authority
-    //proofOfOwnership(pkA, skA, context) == 1;
-
-    // check if proof OK
-    //field[2] computedHash = sha256packed([skA, id, score, salt]);
-    field[2] computedHash = sha256packed([0, id, score, salt]);
-    assert(computedHash == publicHash);
-
-    field[2] computedHashID = sha256([0, 0, 0, id]);
-    assert(computedHashID == hashID);
+def main(private field score, field threshold) -> bool {
     assert(score >= threshold);
     return true;
 }

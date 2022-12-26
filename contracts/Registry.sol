@@ -54,7 +54,7 @@ contract Registry is Ownable {
         Person storage person = persons[_hashID];
         // check if registered
         require(person.hashID != 0, "Person not registered!");
-        uint256[4] memory inputs = [uint256(uint128(uint160(msg.sender))), person.accessHashLow, person.accessHashHigh, person.parameter];
+        uint256[4] memory inputs = [uint256(uint128(uint160(tx.origin))), person.accessHashLow, person.accessHashHigh, person.parameter];
         return verifier.verifyTx(_proof, inputs);
     }
 }

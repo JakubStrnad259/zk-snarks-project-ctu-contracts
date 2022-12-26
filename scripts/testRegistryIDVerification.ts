@@ -4,7 +4,7 @@ import { Registry__factory, Registry } from "../typechain-types";
 import sha256 from 'crypto-js/sha256';
 
 async function main() {
-    const contract:Registry = Registry__factory.connect("0x5F71a7cAfD591152Da715E3fE750622A4fd4243F", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
+    const contract:Registry = Registry__factory.connect("0x8C5fFb908f6495A3349919C729B81069A5b038b7", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
     
     const proof = {
         "scheme": "g16",

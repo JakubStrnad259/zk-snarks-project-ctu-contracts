@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 
 async function main() {
   const contract = await ethers.getContractFactory("Registry");
-  const deployedContract = await contract.deploy("0x955A56f9d9cEb1Fd87177656857a914BA9A1AB6C");
+  const deployedContract = await contract.deploy("0x64ad146abc687Ef341E3E9281A77CFC993007C6a");
   await deployedContract.deployed()
   console.log(`Contract deployed to address ${deployedContract.address}`);
 }
