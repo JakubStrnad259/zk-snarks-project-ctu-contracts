@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./utils.sol";
 
 interface IRegistryVerifier {
-    function verifyTx(Proof memory proof, uint[4] memory input) external view returns(bool);
+    function verifyTx(Proof memory proof, uint[6] memory input) external view returns(bool);
 }
 
 contract Registry is Ownable {
@@ -21,7 +21,6 @@ contract Registry is Ownable {
         bytes32 hashID;
         uint128 accessHashLow;
         uint128 accessHashHigh;
-        uint128 parameter;
     }
 
     mapping(bytes32 => Person) public persons;
@@ -40,9 +39,9 @@ contract Registry is Ownable {
     /**
      * @notice Registers a person to the national registry
      */
-    function setPerson(bytes32 _hashID, bytes32 _accessHashLow, bytes32 _accessHashHigh, bytes32 _parameter) external onlyOwner {
+    function setPerson(bytes32 _hashID, uint256 _accessHashLow, uint256 _accessHashHigh) external onlyOwner {
         require(persons[_hashID].hashID == 0, "Person already registered!");
-        persons[_hashID] = Person(_hashID, uint128(uint256(_accessHashLow)), uint128(uint256(_accessHashHigh)), uint128(uint256(_parameter)));
+        persons[_hashID] = Person(_hashID, uint128(_accessHashLow), uint128(_accessHashHigh));
     }
 
     /**
@@ -50,11 +49,18 @@ contract Registry is Ownable {
      * @param _hashID hashed id of a person that needs to be verified
      * @param _proof proof of a person that the person knows the password (ID belongs to the person)  
      */
-    function verify(bytes32 _hashID, Proof memory _proof) external view returns(bool) {
+    function verify(bytes32 _hashID, Proof memory _proof, uint256[3] memory _publicInputs) external view returns(bool) {
         Person storage person = persons[_hashID];
         // check if registered
         require(person.hashID != 0, "Person not registered!");
-        uint256[4] memory inputs = [uint256(uint128(uint160(tx.origin))), person.accessHashLow, person.accessHashHigh, person.parameter];
+        uint256[6] memory inputs = [
+            uint256(uint128(uint160(tx.origin))), 
+            person.accessHashLow, 
+            person.accessHashHigh,
+            _publicInputs[0],
+            _publicInputs[1],
+            _publicInputs[2]
+        ];
         return verifier.verifyTx(_proof, inputs);
     }
 }

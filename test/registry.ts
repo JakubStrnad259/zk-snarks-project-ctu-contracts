@@ -21,27 +21,77 @@ describe("Registry", function() {
     let registryVerifier: RegistryVerifier;
     let RegistryContract;
     let RegistryVerifierContract;
-    
-    const addPersonToRegistry = async(id: number, salt: number, sender: string) => {
+
+    const generateRegistryAccessHash = async(id: number, salt: number) => {
+        const provider = await initialize();
+        const source: string = fileSystemResolver("project", "zokrates/utils/ComputeRegistryAccessHash.zok");
+        const artifacts = provider.compile(source);
+        const { witness, output } = provider.computeWitness(artifacts, [id.toString(), salt.toString()]);
+        var parsedOutput = JSON.parse(output);
+        return parsedOutput;
+    }
+
+    const generateRegistryPublicProof = async(id: number, salt: number, sender: string) => {
         const provider = await initialize();
         const source: string = fileSystemResolver("project", "zokrates/utils/ComputeRegistryHash.zok");
         const artifacts = provider.compile(source);
         const { witness, output } = provider.computeWitness(artifacts, [id.toString(), salt.toString(), ethers.BigNumber.from("0x" + sender.slice(-32)).toString()]);
         const keypair = provider.setup(artifacts.program);
-        const inputs = provider.generateProof(artifacts.program, witness, keypair.pk).inputs;
+        const proof = provider.generateProof(artifacts.program, witness, keypair.pk)
+        var parsedOutput = JSON.parse(output);
+        return [ proof, parsedOutput ];
+    }
+
+    const generateRegistryProof = async(id: number, salt: number, sender: string, passwordHash: any, publicHash: any) => {
+        const provider = await initialize();
+        const source: string = fileSystemResolver("project", "zokrates/authorities/RegistryVerifier.zok");
+        const artifacts = provider.compile(source);
+        const { witness, output } = provider.computeWitness(
+            artifacts,
+            [
+                id.toString(), 
+                salt.toString(), 
+                ethers.BigNumber.from("0x" + sender.slice(-32)).toString(),
+                [
+                    passwordHash[0].toString(),
+                    passwordHash[1].toString()
+                ],
+                [
+                    publicHash[0].toString(),
+                    publicHash[1].toString()
+                ]
+            ]
+        );
+        const keypair = provider.setup(artifacts.program);
+        return provider.generateProof(artifacts.program, witness, keypair.pk);
+    }
+
+    const addPersonToRegistry = async(id: number, salt: number) => {
         const hash = "0x" + sha256(id.toString());
+        const accessHash = await generateRegistryAccessHash(id, salt);
         const tx = await registry.setPerson(
             hash,
-            inputs[0],
-            inputs[1],
-            inputs[2]
+            ethers.BigNumber.from(accessHash[0]),
+            ethers.BigNumber.from(accessHash[1])
         );
     }
 
     const getPersonFromRegistry = async(id: number) => {
         const hash = "0x" + sha256(id.toString());
         const tx = await registry.persons(hash);
-        return [tx.hashID, tx.accessHashLow, tx.accessHashHigh, tx.parameter];
+        return [tx.hashID, tx.accessHashLow, tx.accessHashHigh];
+    }
+
+    const verifyPerson = async(id: number, proof:any, inputs: any) => {
+        const hashID = "0x" + sha256(id.toString());
+        const tx = await registry.verify(
+            hashID, 
+            //@ts-ignore
+            [proof.a, proof.b, proof.c], 
+            ethers.BigNumber.from(inputs[0]),
+            ethers.BigNumber.from(inputs[1]),
+            ethers.BigNumber.from(inputs[2])
+        );
     }
 
     beforeEach(async() => {
@@ -56,14 +106,14 @@ describe("Registry", function() {
         registry = await RegistryContract.deploy(registryVerifier.address);
         await registry.deployed();
     });
-    
+    /*
     it("Should add a person to registry and then retrieve it", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
         const hashID = "0x" + sha256(id.toString());
 
         const senderAddress: string = tester.address;
-        await addPersonToRegistry(id, salt, senderAddress);
+        await addPersonToRegistry(id, salt);
         const personData = await getPersonFromRegistry(id);
         expect(personData[0]).to.be.equal(hashID);
     });
@@ -75,18 +125,39 @@ describe("Registry", function() {
         expect(personData[0]).to.be.equal(nullBytes);
         expect(personData[1]).to.be.equal(nullBytes);
         expect(personData[2]).to.be.equal(nullBytes);
-        expect(personData[3]).to.be.equal(nullBytes);
     });
 
     it("Should revert when registering a person with the same ID", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
         const senderAddress: string = tester.address;
-        await addPersonToRegistry(id, salt, senderAddress);
-        await expect(addPersonToRegistry(id, salt, senderAddress)).to.be.revertedWith("Person already registered!");
+        await addPersonToRegistry(id, salt);
+        await expect(addPersonToRegistry(id, salt)).to.be.revertedWith("Person already registered!");
     });
-
+    */
     it("Should verify registered user with valid proof", async() => {
+        const id: number = 12323923;
+        const salt: number = 22392392;
+        const senderAddress: string = tester.address;
+        await addPersonToRegistry(id, salt);
+        // using just for pass hash as input
+        const accessHash = await generateRegistryAccessHash(id, salt);
+        // using just for publicHash as input
+        let publicProof, publicHash;
+        [ publicProof, publicHash ] = await generateRegistryPublicProof(id, salt, senderAddress);
+        // calculating actual proof
+        const proof = await generateRegistryProof(
+            id, 
+            salt, 
+            senderAddress, 
+            accessHash,
+            publicHash
+        );
+        console.log(proof);
+        //@ts-ignore
+        const result = await verifyPerson(id, proof.proof, [publicProof.inputs.slice(-3)]);
+        console.log(result);
+        expect(result).to.be.true;
 
     });
 
