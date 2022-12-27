@@ -22,7 +22,6 @@ contract Registration {
         bytes32 usernameHash;
         uint128 passwordHashLow;
         uint128 passwordHashHigh;
-        uint128 parameter;
     }
 
     mapping(bytes32 => Student) public students;
@@ -45,11 +44,11 @@ contract Registration {
         require(scio.verify(_hashID, CTU_SCIO_THRESHOLD, _registryProof), "SCIO exam verification is invalid!");
         require(verifier.verifyTx(_passwordProof, _passwordProofInput), "Sender does not know password!");
         require(students[_hashUsername].usernameHash == 0, "The student is already registered!");
+        // save passwordHash and assign it to usernameHash
         students[_hashUsername] = Student(
-            _hashUsername, 
+            _hashUsername,
             uint128(uint256(_passwordProofInput[0])), 
-            uint128(uint256(_passwordProofInput[1])), 
-            uint128(_passwordProofInput[2])
+            uint128(uint256(_passwordProofInput[1]))
         );
         return true;
     }

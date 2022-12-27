@@ -4,41 +4,56 @@ import { Login, Login__factory } from "../typechain-types";
 import sha256 from 'crypto-js/sha256';
 
 async function main() {
-    const contract:Login = Login__factory.connect("0x38E545720365200EEE29e77fbe5254bcF36875b0", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
+    const contract:Login = Login__factory.connect("0x2d4C2FBa5c168290c2de591f5Bb6C3d56DF07b1a", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
     const proof = {
-        "scheme": "g16",
-        "curve": "bn128",
-        "proof": {
-          "a": [
-            "0x1ca01198a6d39f1db3ed12c02af27ce9e13ad73afc87ef3e069a99496b0b3a75",
-            "0x138bfc0984add7bb49220dc6ff11de61044c189a9f733031ea8e64796cabc75f"
+      "scheme": "g16",
+      "curve": "bn128",
+      "proof": {
+        "a": [
+          "0x13d1597e4d12a4495bceb228ebf668f93d9dce43b984a3debf9cec571c2bad50",
+          "0x13ae0a01507b5274f9b76f8b176aebde90e0726107cc068e6c41acae85f0db9a"
+        ],
+        "b": [
+          [
+            "0x2abcdc511f588a019673ca2a3f513aba835203cb1504f2ed84b9c035f6d59c41",
+            "0x2be9574eaffa3dfb37b2623da6180c3802e8779bc189b690de1e61dc42937fcc"
           ],
-          "b": [
-            [
-              "0x074e69635213b969270c720613869711554c3770fd9d5d0f847b89077facece7",
-              "0x2388cc855bdfc0ec66d44ea4eb1c7fa85f5bb45d16cc602a1b73bf2d915d0ff5"
-            ],
-            [
-              "0x0f72e7e00f26fc00d46a1610714f672ebf1e8929a02e93b4324fcbf80a1755ac",
-              "0x224a69f9e368f40ec98dfd6b984984c35f85c4de8b6ae860ad96924d972f6936"
-            ]
-          ],
-          "c": [
-            "0x22624a4af7d1020cb09609ee526d337ac4b45dc396b1fb6ef46c2f23ed617697",
-            "0x06c547aa2cab872a48f6640ab832b18852f4e62ae86c2e7a283e042cef62ef09"
+          [
+            "0x2cdfbde89de5454f5aacf7b279f244cb9540be45d8804fdf559ee7f3ce83c1da",
+            "0x21e36a59e0fcefb778775850b8a2d28cad1ea96be573b68850fdd65679d19854"
           ]
-        },
-        "inputs": [
-          "0x00000000000000000000000000000000c46b22af700fcb56ecda6973f444bfa1",
-          "0x0000000000000000000000000000000063c6cbd853585daaf2d7150ab1620cc8",
-          "0x0000000000000000000000000000000011e1c35ae05af7f12a7de6d52dbe6124",
-          "0x0000000000000000000000000000000000000000000000000000000000000001"
+        ],
+        "c": [
+          "0x1e0c6fbc0f8db07f18e9452b7fa9fb9ffb74e3de57dc5674d62b74eedb99d07c",
+          "0x06fc6507912f6cb963d0bc5a7cbe107a6f20db30110c68298c951dc29a8ad2a8"
         ]
+      },
+      "inputs": [
+        "0x00000000000000000000000000000000c46b22af700fcb56ecda6973f444bfa1",
+        "0x00000000000000000000000000000000c6481e22c5ff4164af680b8cfaa5e8ed",
+        "0x000000000000000000000000000000003120eeff89c4f307c4a6faaae059ce10",
+        "0x0000000000000000000000000000000063c6cbd853585daaf2d7150ab1620cc8",
+        "0x0000000000000000000000000000000011e1c35ae05af7f12a7de6d52dbe6124",
+        "0x0000000000000000000000000000000000000000000000000000000000000001"
+      ]
     };
     const username = "username";
     const hash = "0x" + sha256(username);
     //@ts-ignore
-    const result = await contract.authenticate(hash, [proof.proof.a, proof.proof.b, proof.proof.c]);
+    const result = await contract.authenticate(
+      hash, 
+      //@ts-ignore
+      [
+        proof.proof.a, 
+        proof.proof.b, 
+        proof.proof.c,
+      ], 
+      [
+        ethers.BigNumber.from(proof.inputs[3]),
+        ethers.BigNumber.from(proof.inputs[4]),
+        ethers.BigNumber.from(proof.inputs[5]),
+      ]
+      );
     console.log(result);
     //const somethign = await contract.persons(1);
     //console.log(somethign);
