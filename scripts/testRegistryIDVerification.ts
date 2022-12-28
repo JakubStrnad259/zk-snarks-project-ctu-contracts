@@ -1,49 +1,52 @@
 import { ethers } from "hardhat";
-import { Registry__factory, Registry } from "../typechain-types";
+import { Registry__factory, Registry, RegistryVerifier, RegistryVerifier__factory } from "../typechain-types";
 //@ts-ignore
 import sha256 from 'crypto-js/sha256';
 
 async function main() {
-    const contract:Registry = Registry__factory.connect("0x8C5fFb908f6495A3349919C729B81069A5b038b7", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
+    const contract:Registry = Registry__factory.connect("0x334ba9cA2f8Bd013F4c48247b83Eaef6d31aAefe", await ethers.getSigner("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"));
     
     const proof = {
-        "scheme": "g16",
-        "curve": "bn128",
-        "proof": {
-          "a": [
-            "0x19adc9c6df5753ae14590be5c6abe1e054932121ad5a9b479ebfc5cc58ec0786",
-            "0x0f639c858c25b9608b6d44f04bcc5436e5a3e4912607c6c03f69c68a1461e743"
+      "scheme": "g16",
+      "curve": "bn128",
+      "proof": {
+        "a": [
+          "0x0abe56492c6d803fa8a41a3cf4aca37ba9808e53bccd9bf87e00316c01314458",
+          "0x115cee17dcfc61a5b1e218d417856cab35a7e567a3e472d8ae05be00fa01aa64"
+        ],
+        "b": [
+          [
+            "0x03e5e7f52b0553cf23e45511eefa2dcf6b9d74e29112d933f9f2a6f5c8f6163a",
+            "0x26029827278768bd2fec48686ce5b44aafd773e276e3f63eea93f313a289ae7b"
           ],
-          "b": [
-            [
-              "0x16f2459cac3182800bd8c85edc80ec90a57c527412c2a5a173422bcff35ad18a",
-              "0x103f40f83ebfb502de8681cfa8d0c4e5c3d539f0fc8bb17b5801e8dc7edc3b9a"
-            ],
-            [
-              "0x29e6c699186a8f842ec35525bc2b46c3908f99318c536d98968442de0b3d4273",
-              "0x00308e1a2e2fa567aa5c8bfb3ed35f5c1e0a511805db6e2e3ff11d37b30289bc"
-            ]
-          ],
-          "c": [
-            "0x0cc4fb1f672ade3988fee6c5d98beec686cd07a62edd1e570bcd7f66de1bf919",
-            "0x17126864110d78b690df0a3d0eb2ae1c72f086ddf52b3d12a0e0f4d3eb332b81"
+          [
+            "0x19ee70f9fa373fa0fda65b57bf197ff4e32ee718f696126cb0e3825328a1473e",
+            "0x281db762990be88613e08b5da0ef60a4a47ec7f23bbc1f91f6fc728554131345"
           ]
-        },
-        "inputs": [
-          "0x00000000000000000000000000000000c46b22af700fcb56ecda6973f444bfa1",
-          "0x00000000000000000000000000000000d8e6ef25573a61b2a6c82f081e9d3f52",
-          "0x00000000000000000000000000000000365d339d548280ac9e6d187f9f4dd653",
-          "0x0000000000000000000000000000000000000000000000000000000000000001"
+        ],
+        "c": [
+          "0x1b6fb1125fe3ef49e4bcae11122d489258fc29a6facdbc91e9fae3f31665b50d",
+          "0x2ffbcb7f94a4b85f2e2f1ee20064d5ba88f20425ace40ce064e2a1c38491e6bc"
         ]
-      }
-
-    const id = 1;
+      },
+      "inputs": [
+        "0x000000000000000000000000000000001aad88f6f4ce6ab8827279cfffb92266",
+        "0x00000000000000000000000000000000ccac2dc9b00118ee5bc07e8ece898ae3",
+        "0x00000000000000000000000000000000ca33859b94c653f57b0e506ffd33ef12",
+        "0x0000000000000000000000000000000016ddf1e14bab85bc9dff19d2eace6c5a",
+        "0x000000000000000000000000000000000c03148e1b3c2daa77f8e1029efe229a",
+        "0x0000000000000000000000000000000000000000000000000000000000000001"
+      ]
+    }
+    
+    console.log(proof.inputs.slice(-3));
+    const id = 12323923;
     const hash = "0x" + sha256(id.toString());
     const person = await contract.persons(hash);
     console.log(person);
 
     //@ts-ignore
-    const result = await contract.verify(hash, [proof.proof.a, proof.proof.b, proof.proof.c]);
+    const result = await contract.verify(hash, [proof.proof.a, proof.proof.b, proof.proof.c], proof.inputs.slice(-3));
     console.log(result);
     //const somethign = await contract.persons(1);
     //console.log(somethign);

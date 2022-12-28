@@ -5,6 +5,7 @@ import sha256 from 'crypto-js/sha256';
 import { expect, use } from "chai";
 import { initialize } from 'zokrates-js';
 
+
 const fileSystemResolver = (from: string, to: string) => {
     const fs = require("fs");
     const path = require("path");
@@ -31,15 +32,13 @@ describe("Registry", function() {
         return parsedOutput;
     }
 
-    const generateRegistryPublicProof = async(id: number, salt: number, sender: string) => {
+    const generateRegistryPublicHash = async(id: number, salt: number, sender: string) => {
         const provider = await initialize();
         const source: string = fileSystemResolver("project", "zokrates/utils/ComputeRegistryHash.zok");
         const artifacts = provider.compile(source);
         const { witness, output } = provider.computeWitness(artifacts, [id.toString(), salt.toString(), ethers.BigNumber.from("0x" + sender.slice(-32)).toString()]);
-        const keypair = provider.setup(artifacts.program);
-        const proof = provider.generateProof(artifacts.program, witness, keypair.pk)
         var parsedOutput = JSON.parse(output);
-        return [ proof, parsedOutput ];
+        return parsedOutput;
     }
 
     const generateRegistryProof = async(id: number, salt: number, sender: string, passwordHash: any, publicHash: any) => {
@@ -54,22 +53,25 @@ describe("Registry", function() {
                 ethers.BigNumber.from("0x" + sender.slice(-32)).toString(),
                 [
                     passwordHash[0].toString(),
-                    passwordHash[1].toString()
+                    passwordHash[1].toString(),
                 ],
                 [
                     publicHash[0].toString(),
-                    publicHash[1].toString()
-                ]
+                    publicHash[1].toString(),
+                ],
             ]
         );
-        const keypair = provider.setup(artifacts.program);
-        return provider.generateProof(artifacts.program, witness, keypair.pk);
+
+        const fs = require("fs");
+        const file = fs.readFileSync("./test/keys/registryProving.key");
+        const key = new Uint8Array(file);
+        return provider.generateProof(artifacts.program, witness, key);
     }
 
     const addPersonToRegistry = async(id: number, salt: number) => {
         const hash = "0x" + sha256(id.toString());
         const accessHash = await generateRegistryAccessHash(id, salt);
-        const tx = await registry.setPerson(
+        return await registry.setPerson(
             hash,
             ethers.BigNumber.from(accessHash[0]),
             ethers.BigNumber.from(accessHash[1])
@@ -84,18 +86,20 @@ describe("Registry", function() {
 
     const verifyPerson = async(id: number, proof:any, inputs: any) => {
         const hashID = "0x" + sha256(id.toString());
-        const tx = await registry.verify(
+        return await registry.verify(
             hashID, 
             //@ts-ignore
             [proof.a, proof.b, proof.c], 
-            ethers.BigNumber.from(inputs[0]),
-            ethers.BigNumber.from(inputs[1]),
-            ethers.BigNumber.from(inputs[2])
+            [
+                ethers.BigNumber.from(inputs[0]),
+                ethers.BigNumber.from(inputs[1]),
+                ethers.BigNumber.from(inputs[2])
+            ]
         );
     }
 
     beforeEach(async() => {
-        [tester, addr1, ...addrs] = await ethers.getSigners();
+        [tester, ...addrs] = await ethers.getSigners();
 
         RegistryContract = await ethers.getContractFactory("Registry");
         RegistryVerifierContract = await ethers.getContractFactory("RegistryVerifier");
@@ -106,13 +110,12 @@ describe("Registry", function() {
         registry = await RegistryContract.deploy(registryVerifier.address);
         await registry.deployed();
     });
-    /*
+
     it("Should add a person to registry and then retrieve it", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
         const hashID = "0x" + sha256(id.toString());
 
-        const senderAddress: string = tester.address;
         await addPersonToRegistry(id, salt);
         const personData = await getPersonFromRegistry(id);
         expect(personData[0]).to.be.equal(hashID);
@@ -130,21 +133,20 @@ describe("Registry", function() {
     it("Should revert when registering a person with the same ID", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
-        const senderAddress: string = tester.address;
         await addPersonToRegistry(id, salt);
         await expect(addPersonToRegistry(id, salt)).to.be.revertedWith("Person already registered!");
     });
-    */
+
     it("Should verify registered user with valid proof", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
         const senderAddress: string = tester.address;
+
         await addPersonToRegistry(id, salt);
         // using just for pass hash as input
         const accessHash = await generateRegistryAccessHash(id, salt);
         // using just for publicHash as input
-        let publicProof, publicHash;
-        [ publicProof, publicHash ] = await generateRegistryPublicProof(id, salt, senderAddress);
+        const publicHash = await generateRegistryPublicHash(id, salt, senderAddress);
         // calculating actual proof
         const proof = await generateRegistryProof(
             id, 
@@ -153,10 +155,7 @@ describe("Registry", function() {
             accessHash,
             publicHash
         );
-        console.log(proof);
-        //@ts-ignore
-        const result = await verifyPerson(id, proof.proof, [publicProof.inputs.slice(-3)]);
-        console.log(result);
+        const result = await verifyPerson(id, proof.proof, proof.inputs.slice(-3));
         expect(result).to.be.true;
 
     });

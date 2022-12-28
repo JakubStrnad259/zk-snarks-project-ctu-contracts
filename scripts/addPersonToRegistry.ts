@@ -5,7 +5,7 @@ import sha256 from 'crypto-js/sha256';
 
 
 async function main() {
-    const contract:Registry = Registry__factory.connect("0x9352CC61ed4ca9219D245ad99D06a983676CBb80", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
+    const contract:Registry = Registry__factory.connect("0x334ba9cA2f8Bd013F4c48247b83Eaef6d31aAefe", await ethers.getSigner("0xe8028954C46B22AF700fCb56eCDA6973F444bFA1"));
 
     //const person = await contract.persons(0);
     //console.log(person);
@@ -13,9 +13,9 @@ async function main() {
     //@ts-ignore
     //const result = await contract.verify([proof.proof.a, proof.proof.b, proof.proof.c], 1);
     //console.log(result);
-    const id = 1;
+    const id = 12323923;
     const hash = "0x" + sha256(id.toString());
-    const somethign = await contract.setPerson(hash, "0x00000000000000000000000000000000d8e6ef25573a61b2a6c82f081e9d3f52", "0x00000000000000000000000000000000365d339d548280ac9e6d187f9f4dd653", "0x0000000000000000000000000000000000000000000000000000000000000001");
+    const somethign = await contract.setPerson(hash, ethers.BigNumber.from("272056514887554346504893268138348088035"), ethers.BigNumber.from("268771572175224303169343049618664189714"));
     console.log(somethign.value);
 }
 
