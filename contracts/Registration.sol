@@ -7,7 +7,7 @@ interface IPasswordVerifier {
 }
 
 interface ISCIO {
-    function verify(bytes32 _hashID, uint256 _threshold, Proof memory _registryProof) external view returns(bool);
+    function verify(bytes32 _hashID, uint256 _threshold, Proof memory _registryProof, uint256[3] memory _registryProofPublicInputs) external view returns(bool);
 }
 
 contract Registration {
@@ -38,10 +38,11 @@ contract Registration {
         bytes32 _hashID,
         bytes32 _hashUsername,
         uint256[3] memory _passwordProofInput,
+        uint256[3] memory _registryProofPublicInputs,
         Proof memory _passwordProof,
         Proof memory _registryProof
     ) external returns(bool) {
-        require(scio.verify(_hashID, CTU_SCIO_THRESHOLD, _registryProof), "SCIO exam verification is invalid!");
+        require(scio.verify(_hashID, CTU_SCIO_THRESHOLD, _registryProof, _registryProofPublicInputs), "SCIO exam verification is invalid!");
         require(verifier.verifyTx(_passwordProof, _passwordProofInput), "Sender does not know password!");
         require(students[_hashUsername].usernameHash == 0, "The student is already registered!");
         // save passwordHash and assign it to usernameHash
