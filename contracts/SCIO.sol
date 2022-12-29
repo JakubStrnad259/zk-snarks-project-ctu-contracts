@@ -8,7 +8,7 @@ interface ISCIOVerifier {
 }
 
 interface IRegistry {
-    function verify(bytes32 _hashID, Proof memory _proof) external view returns(bool);
+    function verify(bytes32 _hashID, Proof memory _proof, uint256[3] memory _registryProofPublicInputs) external view returns(bool);
 }
 
 contract SCIO is Ownable {
@@ -44,10 +44,11 @@ contract SCIO is Ownable {
     function verify(
         bytes32 _hashID,
         uint256 _threshold,
-        Proof memory _registryProof
+        Proof memory _registryProof,
+        uint256[3] memory _registryProofPublicInputs
     ) external view returns(bool) {
         // To access result sender needs to verify ownership of an ID
-        require(registry.verify(_hashID, _registryProof) == true, "ID does not belong to sender!");
+        require(registry.verify(_hashID, _registryProof, _registryProofPublicInputs) == true, "ID does not belong to sender!");
 
         // Check all results if there is satisfactory one given threshold
         // test pisu ja, neměl bych zobrazovat udaje SCIu.

@@ -11,8 +11,8 @@ contract Registry is Ownable {
     using Pairing for *;
     /**
      * @notice  This contract represents national register of people
-     *          People can be added only by the owner of this contract (authority)
-     *          Person can be added only once
+     *          People can be added only by the owner of this contract (by authority)
+     *          Person with the same ID can be added only once
      */
 
     IRegistryVerifier public verifier;
@@ -48,6 +48,7 @@ contract Registry is Ownable {
      * @notice Verifies proof of a person with given id + check if the person is registered
      * @param _hashID hashed id of a person that needs to be verified
      * @param _proof proof of a person that the person knows the password (ID belongs to the person)  
+     * @param _publicInputs array of public inputs present in the proof
      */
     function verify(bytes32 _hashID, Proof memory _proof, uint256[3] memory _publicInputs) external view returns(bool) {
         Person storage person = persons[_hashID];

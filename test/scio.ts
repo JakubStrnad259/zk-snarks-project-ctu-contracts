@@ -1,11 +1,11 @@
 import { ethers } from "hardhat";
-import { Registry, RegistryVerifier } from "../typechain-types";
+import { SCIO, SCIOVerifier } from "../typechain-types";
 //@ts-ignore
 import sha256 from 'crypto-js/sha256';
 import { expect, use } from "chai";
 import { initialize } from 'zokrates-js';
 
-/*
+
 const fileSystemResolver = (from: string, to: string) => {
     const fs = require("fs");
     const path = require("path");
@@ -14,14 +14,53 @@ const fileSystemResolver = (from: string, to: string) => {
     return source;
 };
 
-describe("Registry", function() {
+describe("SCIO", function() {
     let tester: any;
     let addr1: any;
     let addrs: any;
-    let registry: Registry;
-    let registryVerifier: RegistryVerifier;
+    let registry: any;
+    let registryVerifier: any;
+    let scio: SCIO;
+    let scioVerifier: SCIOVerifier;
     let RegistryContract;
     let RegistryVerifierContract;
+    let SCIOContract;
+    let SCIOVerifierContract;
+
+    const equalProof = (proofFromContract: any, proof: any) => {
+        // equal proof and public parameter
+        expect(proofFromContract.a[0].toString()).to.be.equal(ethers.BigNumber.from(proof.proof.a[0]));
+        expect(proofFromContract.a[1].toString()).to.be.equal(ethers.BigNumber.from(proof.proof.a[1]));
+        expect(proofFromContract.b[0][0].toString()).to.be.equal(ethers.BigNumber.from(proof.proof.b[0][0]));
+        expect(proofFromContract.b[0][1].toString()).to.be.equal(ethers.BigNumber.from(proof.proof.b[0][1]));
+        expect(proofFromContract.b[1][0].toString()).to.be.equal(ethers.BigNumber.from(proof.proof.b[1][0]));
+        expect(proofFromContract.b[1][1].toString()).to.be.equal(ethers.BigNumber.from(proof.proof.b[1][1]));
+        expect(proofFromContract.c[0].toString()).to.be.equal(ethers.BigNumber.from(proof.proof.c[0]));
+        expect(proofFromContract.c[1].toString()).to.be.equal(ethers.BigNumber.from(proof.proof.c[1]));
+    }
+
+    const generateSCIOExamProof = async(id: number, threshold: number) => {
+        const provider = await initialize();
+        const source: string = fileSystemResolver("project", "zokrates/authorities/SCIOVerifier.zok");
+        const artifacts = provider.compile(source);
+        const { witness, output } = provider.computeWitness(
+            artifacts,
+            [
+                id.toString(), 
+                threshold.toString(),
+            ]
+        );
+
+        const fs = require("fs");
+        const file = fs.readFileSync("./test/keys/scioProving.key");
+        const key = new Uint8Array(file);
+        return provider.generateProof(artifacts.program, witness, key);
+    }
+
+    const getExamAttemptOnIndex = async(id: number, index: number) => {
+        const hash = "0x" + sha256(id.toString());
+        return await scio.examAttempts(hash, ethers.BigNumber.from(index));
+    }
 
     const generateRegistryAccessHash = async(id: number, salt: number) => {
         const provider = await initialize();
@@ -78,16 +117,17 @@ describe("Registry", function() {
         );
     }
 
-    const getPersonFromRegistry = async(id: number) => {
+    const addExamAttempt = async(id: number, proof: any, parameter: any) => {
         const hash = "0x" + sha256(id.toString());
-        const tx = await registry.persons(hash);
-        return [tx.hashID, tx.accessHashLow, tx.accessHashHigh];
+        //@ts-ignore
+        return await scio.addExamResult(hash, [proof.a, proof.b, proof.c], parameter);
     }
 
-    const verifyPerson = async(id: number, proof:any, inputs: any) => {
-        const hashID = "0x" + sha256(id.toString());
-        return await registry.verify(
-            hashID, 
+    const verifyExams = async(id: number, proof: any, inputs: any, threshold: number) => {
+        const hash = "0x" + sha256(id.toString());
+        return await scio.verify(
+            hash,
+            threshold,
             //@ts-ignore
             [proof.a, proof.b, proof.c], 
             [
@@ -103,75 +143,66 @@ describe("Registry", function() {
 
         RegistryContract = await ethers.getContractFactory("Registry");
         RegistryVerifierContract = await ethers.getContractFactory("RegistryVerifier");
+        SCIOContract = await ethers.getContractFactory("SCIO");
+        SCIOVerifierContract = await ethers.getContractFactory("SCIOVerifier");
 
         registryVerifier = await RegistryVerifierContract.deploy();
         await registryVerifier.deployed();
 
         registry = await RegistryContract.deploy(registryVerifier.address);
         await registry.deployed();
+
+        scioVerifier = await SCIOVerifierContract.deploy();
+        await scioVerifier.deployed();
+
+        scio = await SCIOContract.deploy(scioVerifier.address, registry.address);
+        await scio.deployed();
     });
 
-    it("Should add a person to registry and then retrieve it", async() => {
+    it("Should add exam attempt into attempts for given person ID and retrieve it", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
-        const hashID = "0x" + sha256(id.toString());
 
         await addPersonToRegistry(id, salt);
-        const personData = await getPersonFromRegistry(id);
-        expect(personData[0]).to.be.equal(hashID);
+        const proof = await generateSCIOExamProof(id, 90);
+        await addExamAttempt(id, proof.proof, proof.inputs.slice(-1)[0]);
+        const attempts = await getExamAttemptOnIndex(id, 0);
+        const savedProof = attempts[0];
+        const parameter = attempts[1];
+
+        // equal proof and public parameter
+        equalProof(savedProof, proof);
+        expect(parameter).to.be.equal(proof.inputs.slice(-1)[0]);
     });
 
-    it("Should return empty data for unregistered person", async() => {
-        const id: number = 12323923;
-        const personData = await getPersonFromRegistry(id);
-        const nullBytes = ethers.utils.formatBytes32String("");
-        expect(personData[0]).to.be.equal(nullBytes);
-        expect(personData[1]).to.be.equal(nullBytes);
-        expect(personData[2]).to.be.equal(nullBytes);
-    });
-
-    it("Should revert when registering a person with the same ID", async() => {
+    it("Should add more than one exam attempts and retrieve them by index", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
+
         await addPersonToRegistry(id, salt);
-        await expect(addPersonToRegistry(id, salt)).to.be.revertedWith("Person already registered!");
+        const proof1 = await generateSCIOExamProof(id, 90);
+        await addExamAttempt(id, proof1.proof, proof1.inputs.slice(-1)[0]);
+        const proof2 = await generateSCIOExamProof(id, 85);
+        await addExamAttempt(id, proof2.proof, proof2.inputs.slice(-1)[0]);
+        const attempts = [await getExamAttemptOnIndex(id, 0), await getExamAttemptOnIndex(id, 1)];
+
+        equalProof(attempts[0][0], proof1);
+        equalProof(attempts[1][0], proof2);
+        expect(attempts[0][1]).to.be.equal(proof1.inputs.slice(-1)[0]);
+        expect(attempts[1][1]).to.be.equal(proof2.inputs.slice(-1)[0]);
     });
 
-    it("Should verify registered user with valid proof", async() => {
+    it("Should return false if correct registry identity but no exam score equal or higher than threshold", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
         const senderAddress: string = tester.address;
 
         await addPersonToRegistry(id, salt);
-        // using just for pass hash as input
         const accessHash = await generateRegistryAccessHash(id, salt);
         // using just for publicHash as input
         const publicHash = await generateRegistryPublicHash(id, salt, senderAddress);
         // calculating actual proof
-        const proof = await generateRegistryProof(
-            id, 
-            salt, 
-            senderAddress, 
-            accessHash,
-            publicHash
-        );
-        const result = await verifyPerson(id, proof.proof, proof.inputs.slice(-3));
-        expect(result).to.be.true;
-
-    });
-
-    it("Should return false with stolen proof but sender is different", async() => {
-        const id: number = 12323923;
-        const salt: number = 22392392;
-        const senderAddress: string = addr1.address;
-
-        await addPersonToRegistry(id, salt);
-        // using just for pass hash as input
-        const accessHash = await generateRegistryAccessHash(id, salt);
-        // using just for publicHash as input
-        const publicHash = await generateRegistryPublicHash(id, salt, senderAddress);
-        // calculating actual proof
-        const proof = await generateRegistryProof(
+        let proof = await generateRegistryProof(
             id, 
             salt, 
             senderAddress, 
@@ -179,18 +210,17 @@ describe("Registry", function() {
             publicHash
         );
 
-        // its sent with tester address which is different from addr1 address
-        const result = await verifyPerson(id, proof.proof, proof.inputs.slice(-3));
+        const result = await verifyExams(id, proof.proof, proof.inputs.slice(-3), 90);
         expect(result).to.be.false;
     });
 
-    it("Should revert when a proof was changed by the sender", async() => {
+    it("Should return true if there is an exam score higher than threshold and registry identity is verified", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
         const senderAddress: string = tester.address;
-
         await addPersonToRegistry(id, salt);
-        // using just for pass hash as input
+        const scioProof = await generateSCIOExamProof(id, 90);
+        await addExamAttempt(id, scioProof.proof, scioProof.inputs.slice(-1)[0]);
         const accessHash = await generateRegistryAccessHash(id, salt);
         // using just for publicHash as input
         const publicHash = await generateRegistryPublicHash(id, salt, senderAddress);
@@ -203,21 +233,17 @@ describe("Registry", function() {
             publicHash
         );
 
-        proof.proof = {
-            "a": [proof.proof.a[0], ethers.BigNumber.from(proof.proof.a[1]).add(ethers.BigNumber.from(1)).toHexString()],
-            "b": proof.proof.b,
-            "c": proof.proof.c
-        }
-
-        // its sent with tester address which is different from addr1 address
-        await expect(verifyPerson(id, proof.proof, proof.inputs.slice(-3))).to.be.reverted;
+        const result = await verifyExams(id, proof.proof, proof.inputs.slice(-3), 90);
+        expect(result).to.be.true;
     });
 
-    it("Should revert when verifing unregistered person", async() => {
+    it("Should revert if there is an exam score higher than threshold and correct verification proof is sent from diff address", async() => {
         const id: number = 12323923;
         const salt: number = 22392392;
-        const senderAddress: string = tester.address;
-
+        const senderAddress: string = addr1.address;
+        await addPersonToRegistry(id, salt);
+        const scioProof = await generateSCIOExamProof(id, 90);
+        await addExamAttempt(id, scioProof.proof, scioProof.inputs.slice(-1)[0]);
         const accessHash = await generateRegistryAccessHash(id, salt);
         // using just for publicHash as input
         const publicHash = await generateRegistryPublicHash(id, salt, senderAddress);
@@ -229,7 +255,8 @@ describe("Registry", function() {
             accessHash,
             publicHash
         );
-        await expect(verifyPerson(id, proof.proof, proof.inputs.slice(-3))).to.be.reverted;
+
+        // sender is addr1 not tester!
+        await expect(verifyExams(id, proof.proof, proof.inputs.slice(-3), 90)).to.be.revertedWith("ID does not belong to sender!");
     });
 });
-*/
