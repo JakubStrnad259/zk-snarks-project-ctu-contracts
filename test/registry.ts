@@ -5,7 +5,7 @@ import sha256 from 'crypto-js/sha256';
 import { expect, use } from "chai";
 import { initialize } from 'zokrates-js';
 
-/*
+
 const fileSystemResolver = (from: string, to: string) => {
     const fs = require("fs");
     const path = require("path");
@@ -232,4 +232,3 @@ describe("Registry", function() {
         await expect(verifyPerson(id, proof.proof, proof.inputs.slice(-3))).to.be.reverted;
     });
 });
-*/

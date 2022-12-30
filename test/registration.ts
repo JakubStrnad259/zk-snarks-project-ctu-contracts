@@ -153,7 +153,7 @@ describe("CTU Registration", function() {
         const passwordElements = await getPasswordUINT128Elements(password);
         const passwordHash = await generateHashFromString(password);
         const provider = await initialize();
-        const source: string = fileSystemResolver("project", "zokrates/registration/registration.zok");
+        const source: string = fileSystemResolver("project", "zokrates/registration/Registration.zok");
         const artifacts = provider.compile(source);
         const { witness, output } = provider.computeWitness(
             artifacts,
@@ -276,10 +276,101 @@ describe("CTU Registration", function() {
     });
 
     it("Should revert if no exam which suits given threshold is found", async() => {
+        const id: number = 12323923;
+        const salt: number = 22392392;
+        const senderAddress: string = tester.address;
 
+        const username = "username";
+        const password = "password";
+
+        // add person to registry
+        await addPersonToRegistry(id, salt);
+
+        // add three exam attempts
+        let proof = await generateSCIOExamProof(id, 89);
+        await addExamAttempt(id, proof.proof, proof.inputs.slice(-1)[0]);
+        proof = await generateSCIOExamProof(id, 85);
+        await addExamAttempt(id, proof.proof, proof.inputs.slice(-1)[0]);
+
+        // register student
+        // using just for pass hash as input
+        const accessHash = await generateRegistryAccessHash(id, salt);
+        // using just for publicHash as input
+        const publicHash = await generateRegistryPublicHash(id, salt, senderAddress);
+        // calculating actual proof
+        const registryProof = await generateRegistryProof(
+            id, 
+            salt, 
+            senderAddress, 
+            accessHash,
+            publicHash
+        );
+    
+        const passwordProof = await generatePasswordProof(password);
+
+        await expect(registerStudent(
+            id, 
+            registryProof.proof, 
+            passwordProof.proof, 
+            registryProof.inputs.slice(-3),
+            passwordProof.inputs, 
+            username, 
+            password
+        )).to.be.revertedWith("SCIO exam verification is invalid!");
     });
 
     it("Should revert if the student is already registered", async() => {
+        const id: number = 12323923;
+        const salt: number = 22392392;
+        const senderAddress: string = tester.address;
 
+        const username = "username";
+        const password = "password";
+
+        // add person to registry
+        await addPersonToRegistry(id, salt);
+
+        // add three exam attempts
+        let proof = await generateSCIOExamProof(id, 90);
+        await addExamAttempt(id, proof.proof, proof.inputs.slice(-1)[0]);
+        proof = await generateSCIOExamProof(id, 85);
+        await addExamAttempt(id, proof.proof, proof.inputs.slice(-1)[0]);
+        proof = await generateSCIOExamProof(id, 93);
+        await addExamAttempt(id, proof.proof, proof.inputs.slice(-1)[0]);
+
+        // register student
+        // using just for pass hash as input
+        const accessHash = await generateRegistryAccessHash(id, salt);
+        // using just for publicHash as input
+        const publicHash = await generateRegistryPublicHash(id, salt, senderAddress);
+        // calculating actual proof
+        const registryProof = await generateRegistryProof(
+            id, 
+            salt, 
+            senderAddress, 
+            accessHash,
+            publicHash
+        );
+    
+        const passwordProof = await generatePasswordProof(password);
+
+        await registerStudent(
+            id, 
+            registryProof.proof, 
+            passwordProof.proof, 
+            registryProof.inputs.slice(-3),
+            passwordProof.inputs, 
+            username, 
+            password
+        );
+        await expect(registerStudent(
+            id, 
+            registryProof.proof, 
+            passwordProof.proof, 
+            registryProof.inputs.slice(-3),
+            passwordProof.inputs, 
+            username, 
+            password
+        )).to.be.rejectedWith("The student is already registered!");
     });
 });

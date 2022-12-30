@@ -13,7 +13,7 @@ const fileSystemResolver = (from: string, to: string) => {
     const source = fs.readFileSync(location).toString();
     return source;
 };
-/*
+
 describe("SCIO", function() {
     let tester: any;
     let addr1: any;
@@ -260,4 +260,3 @@ describe("SCIO", function() {
         await expect(verifyExams(id, proof.proof, proof.inputs.slice(-3), 90)).to.be.revertedWith("ID does not belong to sender!");
     });
 });
-*/
