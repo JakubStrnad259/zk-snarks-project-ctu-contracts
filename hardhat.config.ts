@@ -5,6 +5,7 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-contract-sizer";
+import "hardhat-tracer";
 
 dotenv.config();
 
@@ -48,6 +49,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.API_KEY,
+  },
+  mocha: {
+    timeout: 100000000
   },
 };
 

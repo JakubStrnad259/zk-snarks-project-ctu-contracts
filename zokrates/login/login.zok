@@ -1,0 +1,9 @@
+import "hashes/sha256/512bitPacked" as sha256packed;
+
+def main(private field[4] password, field signerAddress, field[2] passHash, field[2] publicHash) -> bool {
+    field[2] calculatedPassHash = sha256packed(password);
+    assert(calculatedPassHash == passHash);
+    field[2] finalHash = sha256packed([0, calculatedPassHash[0], calculatedPassHash[1], signerAddress]);
+    assert(finalHash == publicHash);
+    return true;
+}

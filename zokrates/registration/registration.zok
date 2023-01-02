@@ -1,0 +1,8 @@
+import "hashes/sha256/512bitPacked" as sha256packed;
+
+def main(private field[4] password, field[2] passwordHash) -> bool {
+    // checks if the user knows password
+    field[2] computedPasswordHash = sha256packed(password);
+    assert(computedPasswordHash == passwordHash);
+    return true;
+}

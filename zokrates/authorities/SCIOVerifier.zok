@@ -1,0 +1,14 @@
+import "hashes/sha256/512bitPacked" as sha256packed;
+
+/*
+score: achieved score in scio test
+threshold: required threshold for CTU
+pkA: SCIO public key
+skA: SCIO private key
+id: register id of a person who did a SCIO test
+idHash: sha hash of id
+*/
+def main(private field score, field threshold) -> bool {
+    assert(score >= threshold);
+    return true;
+}
