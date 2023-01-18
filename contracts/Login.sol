@@ -21,8 +21,13 @@ contract Login {
         verifier = ILoginVerifier(_verifierAddress);
     }
 
+    /**
+     * @notice Verifies proof of a person with given id + check if the person is registered
+     * @param _usernameHash hashed username of a person
+     * @param _proof proof of a person that the person knows the password  
+     * @param _publicInputs array of public inputs present in the proof
+     */
     function authenticate(bytes32 _usernameHash, Proof memory _proof, uint256[3] memory _publicInputs) external view returns(bool) {
-        // msg.sender needs to be added
         uint256 passLow;
         uint256 passHigh;
         (,passLow,passHigh) = registration.students(_usernameHash);

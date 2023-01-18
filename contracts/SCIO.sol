@@ -14,7 +14,6 @@ interface IRegistry {
 contract SCIO is Ownable {
     using Pairing for *;
 
-    //bytes32 public ctuPublicKey = "0x323";
     ISCIOVerifier public verifier;
     IRegistry public registry;
 
@@ -28,30 +27,26 @@ contract SCIO is Ownable {
     constructor(address _verifierAddress, address _registryAddress) {
         verifier = ISCIOVerifier(_verifierAddress);
         registry = IRegistry(_registryAddress);
-        //ctuPublicKey = _ctuPublicKey;
     }
 
-    /*
-    function setCTUPublicKey(bytes32 _ctuPublicKey) external onlyOwner {
-        ctuPublicKey = _ctuPublicKey;
-    }
-    */
     function addExamResult(bytes32 _hashID, Proof memory _proof, uint256 _parameter) external onlyOwner {
-        // Maybe comment this more
         examAttempts[_hashID].push(Attempt(_proof, _parameter));
     }
 
+    /**
+     * @notice Verifies proof of a person with given id + check if the person is registered
+     * @param _hashID hashed registry ID of a person that needs to be verified
+     * @param _threshold amount of percentile points that the score attempt needs to have in order to pass the bar  
+     * @param _registryProof proof that the user owns the registryID
+     * @param _registryProofPublicInputs array of public inputs present in registry proof
+     */
     function verify(
         bytes32 _hashID,
         uint256 _threshold,
         Proof memory _registryProof,
         uint256[3] memory _registryProofPublicInputs
     ) external view returns(bool) {
-        // To access result sender needs to verify ownership of an ID
         require(registry.verify(_hashID, _registryProof, _registryProofPublicInputs) == true, "ID does not belong to sender!");
-
-        // Check all results if there is satisfactory one given threshold
-        // test pisu ja, neměl bych zobrazovat udaje SCIu.
         Attempt[] storage attempts = examAttempts[_hashID];
         uint256 attemptCount = attempts.length;
         for (uint256 i = 0; i < attemptCount; i++) {

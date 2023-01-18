@@ -31,9 +31,15 @@ contract Registration {
         scio = ISCIO(_scioAddress);
     }
 
-    /** 
-    * @notice Register user to the CTU system
-    */
+    /**
+     * @notice Registers a person to the CTU
+     * @param _hashID hashed registry ID of a person that wants to register
+     * @param _hashUsername hashed username of the person
+     * @param _passwordProofInput array of public inputs present in the password proof
+     * @param _registryProofPublicInputs array of public inputs present in the registry proof
+     * @param _passwordProof proof that the person knows the chosen password
+     * @param _registryProof proof that the person owns the registry ID
+     */
     function register(
         bytes32 _hashID,
         bytes32 _hashUsername,
