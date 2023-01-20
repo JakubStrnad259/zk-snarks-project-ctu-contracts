@@ -38,6 +38,9 @@ contract Registry is Ownable {
 
     /**
      * @notice Registers a person to the national registry
+     * @param _hashID hashed registry ID of a person
+     * @param _accessHashLow low 16 bytes of the access hash
+     * @param _accessHashHigh high 16 bytes of the access hash
      */
     function setPerson(bytes32 _hashID, uint256 _accessHashLow, uint256 _accessHashHigh) external onlyOwner {
         require(persons[_hashID].hashID == 0, "Person already registered!");
@@ -45,9 +48,9 @@ contract Registry is Ownable {
     }
 
     /**
-     * @notice Verifies proof of a person with given id + check if the person is registered
-     * @param _hashID hashed id of a person that needs to be verified
-     * @param _proof proof of a person that the person knows the password (ID belongs to the person)  
+     * @notice Verifies proof of a person with given registry ID and checks if the person is registered
+     * @param _hashID hashed registry ID of a person that needs to be verified
+     * @param _proof proof of a person that the person owns the ID
      * @param _publicInputs array of public inputs present in the proof
      */
     function verify(bytes32 _hashID, Proof memory _proof, uint256[3] memory _publicInputs) external view returns(bool) {
