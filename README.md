@@ -10,7 +10,7 @@ The SCIO authority is a Czech exam issuer. If you exceed a threshold set by the 
 <h4>CTU</h4>
 This authority represents the university. The person can register as a student at the university using a smart contract. Once registered, the student can authenticate on the blockchain and use university features that require authentication. In other words, the person proves to the contract that he or she is indeed a student at the university.
 
-
+<br/><br/>
 I use zk-SNARKs as a zero-knowledge protocol, because there is a good library called Zokrates that can export Solidity smart contracts from its language, at least with some developer community. Since smart contracts are immutable and issued by authorities, zk-SNARK is a good choice.
 
 
