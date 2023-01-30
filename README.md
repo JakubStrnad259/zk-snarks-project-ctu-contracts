@@ -1,8 +1,5 @@
-# Sample Hardhat Project
+This project aims to create a proof of concept blockchain infrastructure for registration and authentication on the CTU (Czech Technical University).
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
 
 ```shell
 npx hardhat help
