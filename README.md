@@ -1,23 +1,30 @@
-This project aims to create a proof of concept blockchain infrastructure for registration and authentication on the CTU (Czech Technical University).
+This project aims to create a proof-of-concept blockchain infrastructure for registration and authentication at CTU (Czech Technical University).
+
+There are three authorities that exist in this project:
+Registry
+This authority issues a blockchain identification for each person (at birth or when they reach the age of 18). The blockchain identification consists of personID and seedID, which are private values that only the authority and the user know. Later in the project, this identity is used by SCIO and the registration contract to verify the person.
+SCIO
+The SCIO authority is a Czech exam issuer. If you exceed a threshold set by the university you are applying to, you can become a student without an entrance exam. This authority uploads the exam results to the blockchain and links them to the hashed PersonID in the contract.
+CTU
+This authority represents the university. The person can register as a student at the university using a smart contract. Once registered, the student can authenticate on the blockchain and use university features that require authentication. In other words, the person proves to the contract that he or she is indeed a student at the university.
 
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+I use zk-SNARKs as a zero-knowledge protocol, because there is a good library called Zokrates that can export Solidity smart contracts from its language, at least with some developer community. Since smart contracts are immutable and issued by authorities, zk-SNARK is a good choice.
 
-ADDRESSES:
-Registry: 0x334ba9cA2f8Bd013F4c48247b83Eaef6d31aAefe
-Registry verifier: 0xA9E935204398A342F8B9C754E53baA89dC72FaAA
 
-SCIO: 0x5CbF51d45eAAB8d4778c94c0DfcBC27880555072
-SCIO verifier: 0xDed28B8B8911DB250bfec897e7380Ede6642850b
+There are 8 smart contracts in total:
 
-CTU registration: 0x4E754C96995815C97962305d8A1E7D3ABae96639
-Password verifier: 0x1CCa75CD4d70680Bc2798557A9D3A5B1f36D35DD
+Registry.sol
+RegistryVerifier.sol
 
-login contract: 0x2d4C2FBa5c168290c2de591f5Bb6C3d56DF07b1a
-login verifier: 0x7d864968D85fF40bAD1CE4e0dABab194795774bB
+SCIO.sol
+SCIOVerifier.sol
+
+Registration.sol 
+RegistrationVerifier.sol
+
+Login.sol
+LoginVerifier.sol
+
+
+This project is based on my semester project in CTU 2023.
